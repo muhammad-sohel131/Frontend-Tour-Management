@@ -1,27 +1,38 @@
-import Logo from "@/assets/icons/Logo"
-import { Button } from "@/components/ui/button"
+import Logo from "@/assets/icons/Logo";
+import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-} from "@/components/ui/navigation-menu"
+} from "@/components/ui/navigation-menu";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { ModeToggle } from "./ModeToggle"
+} from "@/components/ui/popover";
+import { ModeToggle } from "./ModeToggle";
+import { Link } from "react-router";
+import { authApi, useLogoutMutation, useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import { useAppDispatch } from "@/redux/hook";
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
-  { href: "#", label: "Home", active: true },
-  { href: "#", label: "Features" },
-  { href: "#", label: "Pricing" },
-  { href: "#", label: "About" },
-]
+  { href: "", label: "Home", active: true },
+  { href: "/about", label: "About" },
+];
 
 export default function Component() {
+  const { data } = useUserInfoQuery(undefined);
+  const [logout] = useLogoutMutation()
+  const dispatch = useAppDispatch()
+
+  const handleLogout = async () => {
+    const res = await logout(undefined)
+    dispatch(authApi.util.resetApiState())
+    console.log(res, data)
+  }
+
   return (
     <header className="border-b px-4 md:px-6">
       <div className="flex mx-auto container h-16 p-4 items-center justify-between gap-4">
@@ -91,11 +102,10 @@ export default function Component() {
                 {navigationLinks.map((link, index) => (
                   <NavigationMenuItem key={index}>
                     <NavigationMenuLink
-                      active={link.active}
-                      href={link.href}
+                      asChild
                       className="text-muted-foreground hover:text-primary py-1.5 font-medium"
                     >
-                      {link.label}
+                      <Link to={link.href}>{link.label}</Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                 ))}
@@ -106,14 +116,17 @@ export default function Component() {
         {/* Right side */}
         <div className="flex items-center gap-2">
           <ModeToggle />
-          <Button asChild variant="ghost" size="sm" className="text-sm">
-            <a href="#">Sign In</a>
-          </Button>
-          <Button asChild size="sm" className="text-sm">
-            <a href="#">Get Started</a>
-          </Button>
+          {data?.data?.email ? (
+            <Button onClick={handleLogout} variant="outline" className="text-sm">
+              Logout
+            </Button>
+          ) : (
+            <Button asChild size="sm" className="text-sm">
+              <Link to={"/login"}>Login</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>
-  )
+  );
 }
