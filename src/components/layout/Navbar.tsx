@@ -13,25 +13,32 @@ import {
 } from "@/components/ui/popover";
 import { ModeToggle } from "./ModeToggle";
 import { Link } from "react-router";
-import { authApi, useLogoutMutation, useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import {
+  authApi,
+  useLogoutMutation,
+  useUserInfoQuery,
+} from "@/redux/features/auth/auth.api";
 import { useAppDispatch } from "@/redux/hook";
+import { CRole } from "@/constants/role";
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
-  { href: "", label: "Home", active: true },
-  { href: "/about", label: "About" },
+  { href: "", label: "Home", role: "PUBLIC" },
+  { href: "/about", label: "About", role: "PUBLIC" },
+  { href: "/admin", label: "Dashboard", role: CRole.SUPER_ADMIN },
+  { href: "/user", label: "Dashboard", role: CRole.USER },
 ];
 
 export default function Component() {
   const { data } = useUserInfoQuery(undefined);
-  const [logout] = useLogoutMutation()
-  const dispatch = useAppDispatch()
+  const [logout] = useLogoutMutation();
+  const dispatch = useAppDispatch();
 
   const handleLogout = async () => {
-    const res = await logout(undefined)
-    dispatch(authApi.util.resetApiState())
-    console.log(res, data)
-  }
+    const res = await logout(undefined);
+    dispatch(authApi.util.resetApiState());
+    console.log(res, data);
+  };
 
   return (
     <header className="border-b px-4 md:px-6">
@@ -81,7 +88,6 @@ export default function Component() {
                       <NavigationMenuLink
                         href={link.href}
                         className="py-1.5"
-                        active={link.active}
                       >
                         {link.label}
                       </NavigationMenuLink>
@@ -93,21 +99,24 @@ export default function Component() {
           </Popover>
           {/* Main nav */}
           <div className="flex items-center gap-6">
-            <a href="#" className="text-primary hover:text-primary/90">
-              <Logo />
-            </a>
+            <Logo />
             {/* Navigation menu */}
             <NavigationMenu className="max-md:hidden">
               <NavigationMenuList className="gap-2">
                 {navigationLinks.map((link, index) => (
-                  <NavigationMenuItem key={index}>
-                    <NavigationMenuLink
-                      asChild
-                      className="text-muted-foreground hover:text-primary py-1.5 font-medium"
-                    >
-                      <Link to={link.href}>{link.label}</Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
+                  <>
+                    {(link.role === "PUBLIC" ||
+                      link.role === data?.data?.role) && (
+                      <NavigationMenuItem key={index}>
+                        <NavigationMenuLink
+                          asChild
+                          className="text-muted-foreground hover:text-primary py-1.5 font-medium"
+                        >
+                          <Link to={link.href}>{link.label}</Link>
+                        </NavigationMenuLink>
+                      </NavigationMenuItem>
+                    )}
+                  </>
                 ))}
               </NavigationMenuList>
             </NavigationMenu>
@@ -117,7 +126,11 @@ export default function Component() {
         <div className="flex items-center gap-2">
           <ModeToggle />
           {data?.data?.email ? (
-            <Button onClick={handleLogout} variant="outline" className="text-sm">
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="text-sm"
+            >
               Logout
             </Button>
           ) : (

@@ -48,8 +48,9 @@ export function LoginForm({
     try {
       await login(userInfo).unwrap();
       toast.success("User login Successfully.");
-    } catch (error) {
-      console.error(error);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.log(error)
       if (error?.data?.message === "Password does not match") {
         toast.error("Invalid Credentials");
       }
